@@ -55,6 +55,13 @@ Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=tru
 - `examples/d1/` contains an optional D1 example surface
 - `drizzle.config.ts` supports local migration generation when needed
 
+## Survey Administration
+
+- `/admin` displays response totals, rating averages, rating distributions, low-scoring items, and written feedback.
+- The dashboard requires ChatGPT sign-in and checks the signed-in email against the `ADMIN_EMAIL` runtime variable.
+- Configure `ADMIN_EMAIL` in the Site's runtime environment settings. Keep it out of source control.
+- The public survey requires all eight ratings and both Section 02 answers; each Section 02 answer must contain at least three sentences.
+
 ## Workspace Auth Headers
 
 Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
