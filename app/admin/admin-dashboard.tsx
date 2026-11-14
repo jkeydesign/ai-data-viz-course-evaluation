@@ -1,3 +1,5 @@
+import AdminCharts from "./charts";
+
 export type AdminResponse = {
   id: number;
   name: string | null;
@@ -19,8 +21,6 @@ const questions = [
   "교수자 피드백이 과제 개선에 도움이 되었다.",
 ];
 
-const colors = ["#c95f53", "#df9561", "#d7c27b", "#79aa91", "#24634c"];
-
 function summarize(responses: AdminResponse[], index: number) {
   const values = responses.map((response) => response.ratings[index]).filter((value) => value >= 1 && value <= 5);
   const distribution = [1, 2, 3, 4, 5].map((rating) => values.filter((value) => value === rating).length);
@@ -35,23 +35,6 @@ function averageFor(responses: AdminResponse[], indexes: number[]) {
   const values = indexes.flatMap((index) => responses.map((response) => response.ratings[index]))
     .filter((value) => value >= 1 && value <= 5);
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-}
-
-function MetricList({ responses, indexes }: { responses: AdminResponse[]; indexes: number[] }) {
-  return <div className="admin-metric-list">
-    {indexes.map((index) => {
-      const metric = summarize(responses, index);
-      const tone = metric.average && metric.average < 3.5 ? "low" : metric.average >= 4 ? "high" : "mid";
-      return <article className="admin-metric" key={index}>
-        <div className="admin-metric-heading"><span>{String(index + 1).padStart(2, "0")}. {questions[index]}</span><strong className={tone}>{metric.count ? metric.average.toFixed(2) : "—"}<small>/ 5</small></strong></div>
-        <div className="admin-average-track" role="img" aria-label={`${index + 1}번 문항 평균 ${metric.average.toFixed(2)}점`}><span className={tone} style={{ width: `${metric.average * 20}%` }} /></div>
-        <div className="admin-dist-row" aria-label="응답 분포">
-          <div className="admin-dist-bar">{metric.distribution.map((amount, i) => <span key={i} style={{ width: `${metric.count ? amount / metric.count * 100 : 0}%`, background: colors[i] }} />)}</div>
-          <div className="admin-dist-legend">{metric.distribution.map((amount, i) => <span key={i}><i style={{ background: colors[i] }} />{i + 1}: {amount}</span>)}</div>
-        </div>
-      </article>;
-    })}
-  </div>;
 }
 
 function displayDate(value: string) {
@@ -84,10 +67,7 @@ export default function AdminDashboard({ totalResponses, responses }: { totalRes
     </section>
 
     {totalResponses > responses.length && <p className="admin-sample-note">문항별 분석과 의견은 최근 {responses.length}건 기준입니다.</p>}
-    <section className="admin-panels">
-      <article className="admin-panel"><div className="admin-panel-heading"><div><span className="admin-eyebrow">LEARNING OUTCOMES</span><h2>교육 성과</h2></div><p>01–05점 척도 평균과 응답 분포</p></div><MetricList responses={responses} indexes={[4, 5, 6]} /></article>
-      <article className="admin-panel"><div className="admin-panel-heading"><div><span className="admin-eyebrow">COURSE EXPERIENCE</span><h2>수업 운영</h2></div><p>01–05점 척도 평균과 응답 분포</p></div><MetricList responses={responses} indexes={[0, 1, 2, 3, 7]} /></article>
-    </section>
+    <AdminCharts responses={responses} />
 
     <section className="admin-panel admin-issues"><div className="admin-panel-heading"><div><span className="admin-eyebrow">AREAS TO REVIEW</span><h2>개선 우선 항목</h2></div><p>평균 3.5점 미만 문항을 우선 확인합니다.</p></div>
       {lowItems.length ? <div className="admin-low-list">{lowItems.map((item) => <div className="admin-low-item" key={item.index}><span>{String(item.index + 1).padStart(2, "0")}. {item.question}</span><strong>{item.average.toFixed(2)}<small>/ 5</small></strong></div>)}</div> : <p className="admin-empty">{totalResponses ? "현재 평균 3.5점 미만인 문항이 없습니다." : "응답이 쌓이면 낮은 평가 항목이 여기에 표시됩니다."}</p>}
