@@ -13,6 +13,11 @@ const questions = [
   "교수자의 피드백은 과제를 개선하는 데 도움이 되었다.",
 ];
 const scale = ["전혀 그렇지 않다", "그렇지 않다", "보통이다", "그렇다", "매우 그렇다"];
+const minimumSentences = 3;
+
+function countSentences(value: string) {
+  return (value.trim().match(/[.!?。]+(?=\s|$)/g) ?? []).length;
+}
 
 export default function SurveyForm() {
   const [ratings, setRatings] = useState<(number | null)[]>(Array(8).fill(null));
@@ -23,6 +28,8 @@ export default function SurveyForm() {
   const [status, setStatus] = useState<{ kind: "ok" | "error"; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const answered = useMemo(() => ratings.filter((v) => v !== null).length, [ratings]);
+  const helpfulSentences = countSentences(helpful);
+  const improveSentences = countSentences(improve);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,6 +37,16 @@ export default function SurveyForm() {
     if (missing !== -1) {
       setStatus({ kind: "error", message: `${missing + 1}번 문항에 응답해 주세요.` });
       document.getElementById(`question-${missing + 1}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const shortAnswer = helpfulSentences < minimumSentences
+      ? { id: "helpful", label: "9번 문항" }
+      : improveSentences < minimumSentences
+        ? { id: "improve", label: "10번 문항" }
+        : null;
+    if (shortAnswer) {
+      setStatus({ kind: "error", message: `${shortAnswer.label}에 3문장 이상 작성해 주세요.` });
+      document.getElementById(shortAnswer.id)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     setBusy(true);
@@ -61,9 +78,9 @@ export default function SurveyForm() {
         <div className="scale" aria-label="응답 척도">{scale.map((label, i) => <span key={label}><b>{i + 1}</b>{label}</span>)}</div>
         {questions.map((question, i) => <fieldset className="question" id={`question-${i + 1}`} key={question}><legend className="question-title"><span className="qno">{String(i + 1).padStart(2, "0")}</span><span>{question}</span></legend><div className="choices">{scale.map((label, j) => <div className="choice" key={label}><input type="radio" id={`q${i + 1}-${j + 1}`} name={`q${i + 1}`} checked={ratings[i] === j + 1} onChange={() => setRatings((prev) => prev.map((v, index) => index === i ? j + 1 : v))} /><label htmlFor={`q${i + 1}-${j + 1}`} title={label}><span className="value">{j + 1}</span><span>{label}</span></label></div>)}</div></fieldset>)}
       </section>
-      <section className="section" aria-labelledby="open-title"><div className="section-head"><span className="num">02</span><div><h2 id="open-title">자유롭게 의견을 남겨 주세요</h2><p>응답하지 않아도 설문을 제출할 수 있습니다.</p></div></div>
-        <div className="textarea-wrap"><label htmlFor="helpful">이번 수업에서 가장 도움이 되었던 내용이나 실습은 무엇인가?<span className="optional">선택</span></label><textarea id="helpful" maxLength={2000} value={helpful} onChange={(e) => setHelpful(e.target.value)} placeholder="예: 데이터에서 특징을 찾고 그래프를 선택했던 실습이 도움이 되었어요." /></div>
-        <div className="textarea-wrap"><label htmlFor="improve">앞으로 수업에서 개선되거나 추가되었으면 하는 점은 무엇인가?<span className="optional">선택</span></label><textarea id="improve" maxLength={2000} value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="예: 한국어 용어 설명을 조금 더 천천히 해 주면 좋겠어요." /></div>
+      <section className="section" aria-labelledby="open-title"><div className="section-head"><span className="num">02</span><div><h2 id="open-title">자유롭게 의견을 남겨 주세요</h2><p>두 문항 모두 필수입니다. 각 문항에 3문장 이상 작성해 주세요.</p></div></div>
+        <div className="textarea-wrap"><label htmlFor="helpful">이번 수업에서 가장 도움이 되었던 내용이나 실습은 무엇인가?<span className="required">필수</span></label><textarea id="helpful" required aria-describedby="helpful-count" maxLength={2000} value={helpful} onChange={(e) => setHelpful(e.target.value)} placeholder="예: 데이터에서 특징을 찾고 그래프를 선택했던 실습이 도움이 되었어요." /><p id="helpful-count" className={`sentence-count ${helpfulSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{helpfulSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
+        <div className="textarea-wrap"><label htmlFor="improve">앞으로 수업에서 개선되거나 추가되었으면 하는 점은 무엇인가?<span className="required">필수</span></label><textarea id="improve" required aria-describedby="improve-count" maxLength={2000} value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="예: 한국어 용어 설명을 조금 더 천천히 해 주면 좋겠어요." /><p id="improve-count" className={`sentence-count ${improveSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{improveSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
       </section>
       <section className="section" aria-labelledby="additional-title"><div className="section-head"><span className="num">03</span><div><h2 id="additional-title">추가 의견을 남겨 주세요</h2><p>이름과 의견은 모두 선택 항목입니다.</p></div></div>
         <div className="input-wrap"><label htmlFor="name">이름<span className="optional">선택</span></label><input id="name" type="text" maxLength={80} autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하지 않아도 됩니다." /></div>
@@ -72,7 +89,7 @@ export default function SurveyForm() {
       <div className="actions"><p className="consent">이름은 선택 항목입니다. 이름을 입력하면 이름과 응답이 함께 저장됩니다. 이름을 비워 두면 이름 없이 저장되며, 응답은 강의 성적에 영향을 주지 않습니다.</p><button className="submit" type="submit" disabled={busy}>{busy ? "제출 중…" : <>설문 제출하기 <span aria-hidden="true">→</span></>}</button></div>
       {status && <div className={`status show ${status.kind}`} role="status" aria-live="polite">{status.message}</div>}
     </main>
-    <aside className="side" aria-label="설문 진행 상황"><h2>진행 상황</h2><div className="progress-label"><span>{answered} / 8 문항</span><span>{Math.round(answered / 8 * 100)}%</span></div><div className="track" role="progressbar" aria-label="객관식 응답 진행률" aria-valuemin={0} aria-valuemax={8} aria-valuenow={answered}><div className="bar" style={{ width: `${answered / 8 * 100}%` }} /></div><p className="side-note">객관식 8문항을 모두 선택하면 제출할 수 있습니다. 주관식과 이름은 선택 항목입니다.</p></aside>
+    <aside className="side" aria-label="설문 진행 상황"><h2>진행 상황</h2><div className="progress-label"><span>{answered} / 8 문항</span><span>{Math.round(answered / 8 * 100)}%</span></div><div className="track" role="progressbar" aria-label="객관식 응답 진행률" aria-valuemin={0} aria-valuemax={8} aria-valuenow={answered}><div className="bar" style={{ width: `${answered / 8 * 100}%` }} /></div><p className="side-note">객관식 8문항과 02번 서술 문항을 모두 작성해야 제출할 수 있습니다. 03번은 선택입니다.</p></aside>
     </div>
   </form>;
 }
