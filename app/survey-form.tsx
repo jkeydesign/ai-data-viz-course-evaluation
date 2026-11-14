@@ -18,6 +18,8 @@ export default function SurveyForm() {
   const [ratings, setRatings] = useState<(number | null)[]>(Array(8).fill(null));
   const [helpful, setHelpful] = useState("");
   const [improve, setImprove] = useState("");
+  const [name, setName] = useState("");
+  const [additional, setAdditional] = useState("");
   const [status, setStatus] = useState<{ kind: "ok" | "error"; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const answered = useMemo(() => ratings.filter((v) => v !== null).length, [ratings]);
@@ -36,13 +38,15 @@ export default function SurveyForm() {
       const response = await fetch("/api/responses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ratings, helpful: helpful.trim(), improve: improve.trim() }),
+        body: JSON.stringify({ ratings, helpful: helpful.trim(), improve: improve.trim(), name: name.trim(), additional: additional.trim() }),
       });
       if (!response.ok) throw new Error("submit failed");
       setStatus({ kind: "ok", message: "응답이 제출되었습니다. 소중한 의견 감사합니다." });
       setRatings(Array(8).fill(null));
       setHelpful("");
       setImprove("");
+      setName("");
+      setAdditional("");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setStatus({ kind: "error", message: "응답을 저장하지 못했습니다. 연결 상태를 확인한 뒤 다시 제출해 주세요." });
@@ -61,10 +65,14 @@ export default function SurveyForm() {
         <div className="textarea-wrap"><label htmlFor="helpful">이번 수업에서 가장 도움이 되었던 내용이나 실습은 무엇인가?<span className="optional">선택</span></label><textarea id="helpful" maxLength={2000} value={helpful} onChange={(e) => setHelpful(e.target.value)} placeholder="예: 데이터에서 특징을 찾고 그래프를 선택했던 실습이 도움이 되었어요." /></div>
         <div className="textarea-wrap"><label htmlFor="improve">앞으로 수업에서 개선되거나 추가되었으면 하는 점은 무엇인가?<span className="optional">선택</span></label><textarea id="improve" maxLength={2000} value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="예: 한국어 용어 설명을 조금 더 천천히 해 주면 좋겠어요." /></div>
       </section>
-      <div className="actions"><p className="consent">응답은 익명으로 처리되며 강의 성적에 영향을 주지 않습니다. 제출 전 선택한 내용을 확인해 주세요.</p><button className="submit" type="submit" disabled={busy}>{busy ? "제출 중…" : <>설문 제출하기 <span aria-hidden="true">→</span></>}</button></div>
+      <section className="section" aria-labelledby="additional-title"><div className="section-head"><span className="num">03</span><div><h2 id="additional-title">추가 의견을 남겨 주세요</h2><p>이름과 의견은 모두 선택 항목입니다.</p></div></div>
+        <div className="input-wrap"><label htmlFor="name">이름<span className="optional">선택</span></label><input id="name" type="text" maxLength={80} autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하지 않아도 됩니다." /></div>
+        <div className="textarea-wrap"><label htmlFor="additional">설문하면서 어려웠던 문제나 개선하고 싶은 것이 있다면 적어주세요.<span className="optional">선택</span></label><textarea id="additional" maxLength={2000} value={additional} onChange={(e) => setAdditional(e.target.value)} placeholder="설문을 진행하며 불편했던 점이나 바라는 점을 자유롭게 적어 주세요." /></div>
+      </section>
+      <div className="actions"><p className="consent">이름은 선택 항목입니다. 이름을 입력하면 이름과 응답이 함께 저장됩니다. 이름을 비워 두면 이름 없이 저장되며, 응답은 강의 성적에 영향을 주지 않습니다.</p><button className="submit" type="submit" disabled={busy}>{busy ? "제출 중…" : <>설문 제출하기 <span aria-hidden="true">→</span></>}</button></div>
       {status && <div className={`status show ${status.kind}`} role="status" aria-live="polite">{status.message}</div>}
     </main>
-    <aside className="side" aria-label="설문 진행 상황"><h2>진행 상황</h2><div className="progress-label"><span>{answered} / 8 문항</span><span>{Math.round(answered / 8 * 100)}%</span></div><div className="track" role="progressbar" aria-label="객관식 응답 진행률" aria-valuemin={0} aria-valuemax={8} aria-valuenow={answered}><div className="bar" style={{ width: `${answered / 8 * 100}%` }} /></div><p className="side-note">객관식 8문항을 모두 선택하면 제출할 수 있습니다. 주관식은 선택 응답입니다.</p></aside>
+    <aside className="side" aria-label="설문 진행 상황"><h2>진행 상황</h2><div className="progress-label"><span>{answered} / 8 문항</span><span>{Math.round(answered / 8 * 100)}%</span></div><div className="track" role="progressbar" aria-label="객관식 응답 진행률" aria-valuemin={0} aria-valuemax={8} aria-valuenow={answered}><div className="bar" style={{ width: `${answered / 8 * 100}%` }} /></div><p className="side-note">객관식 8문항을 모두 선택하면 제출할 수 있습니다. 주관식과 이름은 선택 항목입니다.</p></aside>
     </div>
   </form>;
 }
