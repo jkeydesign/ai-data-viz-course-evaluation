@@ -25,28 +25,31 @@ export default function SurveyForm() {
   const [improve, setImprove] = useState("");
   const [name, setName] = useState("");
   const [additional, setAdditional] = useState("");
+  const [section02Attempted, setSection02Attempted] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "error"; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const answered = useMemo(() => ratings.filter((v) => v !== null).length, [ratings]);
   const helpfulSentences = countSentences(helpful);
   const improveSentences = countSentences(improve);
+  const missingSection02 = [
+    ...(helpfulSentences < minimumSentences ? ["도움이 된 내용"] : []),
+    ...(improveSentences < minimumSentences ? ["개선 의견"] : []),
+  ];
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSection02Attempted(true);
+    if (missingSection02.length) {
+      setStatus({ kind: "error", message: "02번의 필수 문항을 각각 3문장 이상 작성해 주세요." });
+      const section = document.getElementById("section-02");
+      section?.scrollIntoView({ behavior: "smooth", block: "center" });
+      section?.focus({ preventScroll: true });
+      return;
+    }
     const missing = ratings.findIndex((v) => v === null);
     if (missing !== -1) {
       setStatus({ kind: "error", message: `${missing + 1}번 문항에 응답해 주세요.` });
       document.getElementById(`question-${missing + 1}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
-    const shortAnswer = helpfulSentences < minimumSentences
-      ? { id: "helpful", label: "9번 문항" }
-      : improveSentences < minimumSentences
-        ? { id: "improve", label: "10번 문항" }
-        : null;
-    if (shortAnswer) {
-      setStatus({ kind: "error", message: `${shortAnswer.label}에 3문장 이상 작성해 주세요.` });
-      document.getElementById(shortAnswer.id)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     setBusy(true);
@@ -64,6 +67,7 @@ export default function SurveyForm() {
       setImprove("");
       setName("");
       setAdditional("");
+      setSection02Attempted(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setStatus({ kind: "error", message: "응답을 저장하지 못했습니다. 연결 상태를 확인한 뒤 다시 제출해 주세요." });
@@ -78,9 +82,11 @@ export default function SurveyForm() {
         <div className="scale" aria-label="응답 척도">{scale.map((label, i) => <span key={label}><b>{i + 1}</b>{label}</span>)}</div>
         {questions.map((question, i) => <fieldset className="question" id={`question-${i + 1}`} key={question}><legend className="question-title"><span className="qno">{String(i + 1).padStart(2, "0")}</span><span>{question}</span></legend><div className="choices">{scale.map((label, j) => <div className="choice" key={label}><input type="radio" id={`q${i + 1}-${j + 1}`} name={`q${i + 1}`} checked={ratings[i] === j + 1} onChange={() => setRatings((prev) => prev.map((v, index) => index === i ? j + 1 : v))} /><label htmlFor={`q${i + 1}-${j + 1}`} title={label}><span className="value">{j + 1}</span><span>{label}</span></label></div>)}</div></fieldset>)}
       </section>
-      <section className="section" aria-labelledby="open-title"><div className="section-head"><span className="num">02</span><div><h2 id="open-title">자유롭게 의견을 남겨 주세요</h2><p>두 문항 모두 필수입니다. 각 문항에 3문장 이상 작성해 주세요.</p></div></div>
-        <div className="textarea-wrap"><label htmlFor="helpful">이번 수업에서 가장 도움이 되었던 내용이나 실습은 무엇인가?<span className="required">필수</span></label><textarea id="helpful" required aria-describedby="helpful-count" maxLength={2000} value={helpful} onChange={(e) => setHelpful(e.target.value)} placeholder="예: 데이터에서 특징을 찾고 그래프를 선택했던 실습이 도움이 되었어요." /><p id="helpful-count" className={`sentence-count ${helpfulSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{helpfulSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
-        <div className="textarea-wrap"><label htmlFor="improve">앞으로 수업에서 개선되거나 추가되었으면 하는 점은 무엇인가?<span className="required">필수</span></label><textarea id="improve" required aria-describedby="improve-count" maxLength={2000} value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="예: 한국어 용어 설명을 조금 더 천천히 해 주면 좋겠어요." /><p id="improve-count" className={`sentence-count ${improveSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{improveSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
+      <section id="section-02" tabIndex={-1} className={`section ${section02Attempted && missingSection02.length ? "section-invalid" : ""}`} aria-labelledby="open-title">
+        <div className="section-head"><span className="num">02</span><div><h2 id="open-title">자유롭게 의견을 남겨 주세요</h2><p>두 문항 모두 필수입니다. 각 문항에 3문장 이상 작성해 주세요.</p></div></div>
+        {section02Attempted && missingSection02.length > 0 && <div className="section-warning" role="alert"><strong>02번 응답을 확인해 주세요.</strong><span>{missingSection02.join("과 ")} 문항을 각각 3문장 이상 작성해야 제출할 수 있습니다.</span></div>}
+        <div className="textarea-wrap"><label htmlFor="helpful">이번 수업에서 가장 도움이 되었던 내용이나 실습은 무엇인가?<span className="required">필수</span></label><textarea id="helpful" required aria-invalid={section02Attempted && helpfulSentences < minimumSentences} aria-describedby="helpful-count" maxLength={2000} value={helpful} onChange={(e) => setHelpful(e.target.value)} placeholder="예: 데이터에서 특징을 찾고 그래프를 선택했던 실습이 도움이 되었어요." /><p id="helpful-count" className={`sentence-count ${helpfulSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{helpfulSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
+        <div className="textarea-wrap"><label htmlFor="improve">앞으로 수업에서 개선되거나 추가되었으면 하는 점은 무엇인가?<span className="required">필수</span></label><textarea id="improve" required aria-invalid={section02Attempted && improveSentences < minimumSentences} aria-describedby="improve-count" maxLength={2000} value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="예: 한국어 용어 설명을 조금 더 천천히 해 주면 좋겠어요." /><p id="improve-count" className={`sentence-count ${improveSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{improveSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
       </section>
       <section className="section" aria-labelledby="additional-title"><div className="section-head"><span className="num">03</span><div><h2 id="additional-title">추가 의견을 남겨 주세요</h2><p>이름과 의견은 모두 선택 항목입니다.</p></div></div>
         <div className="input-wrap"><label htmlFor="name">이름<span className="optional">선택</span></label><input id="name" type="text" maxLength={80} autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하지 않아도 됩니다." /></div>
