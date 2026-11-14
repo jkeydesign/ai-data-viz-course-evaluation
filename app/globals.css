@@ -6,3 +6,4 @@
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
 .question{border:0;margin:0;padding-left:0;padding-right:0}
+.input-wrap{margin-top:14px}.input-wrap label{display:block;font-weight:650;margin-bottom:9px}.input-wrap input{width:100%;min-height:50px;border:1px solid var(--line);border-radius:14px;padding:12px 15px;background:#fcfdfb;color:var(--ink);font:inherit;font-size:14px;transition:border-color .2s,box-shadow .2s}.input-wrap input::placeholder{color:#9aa49d}.input-wrap input:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(27,101,76,.12)}
