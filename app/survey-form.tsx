@@ -13,10 +13,10 @@ const questions = [
   "교수자의 피드백은 과제를 개선하는 데 도움이 되었다.",
 ];
 const scale = ["전혀 그렇지 않다", "그렇지 않다", "보통이다", "그렇다", "매우 그렇다"];
-const minimumSentences = 3;
+const minimumCharacters = 50;
 
-function countSentences(value: string) {
-  return (value.trim().match(/[.!?。]+(?=\s|$)/g) ?? []).length;
+function countCharacters(value: string) {
+  return Array.from(value).length;
 }
 
 export default function SurveyForm() {
@@ -29,18 +29,18 @@ export default function SurveyForm() {
   const [status, setStatus] = useState<{ kind: "ok" | "error"; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const answered = useMemo(() => ratings.filter((v) => v !== null).length, [ratings]);
-  const helpfulSentences = countSentences(helpful);
-  const improveSentences = countSentences(improve);
+  const helpfulCharacters = countCharacters(helpful);
+  const improveCharacters = countCharacters(improve);
   const missingSection02 = [
-    ...(helpfulSentences < minimumSentences ? ["도움이 된 내용"] : []),
-    ...(improveSentences < minimumSentences ? ["개선 의견"] : []),
+    ...(helpfulCharacters < minimumCharacters ? ["도움이 된 내용"] : []),
+    ...(improveCharacters < minimumCharacters ? ["개선 의견"] : []),
   ];
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSection02Attempted(true);
     if (missingSection02.length) {
-      setStatus({ kind: "error", message: "02번의 필수 문항을 각각 3문장 이상 작성해 주세요." });
+      setStatus({ kind: "error", message: "02번의 필수 문항을 각각 공백 포함 50자 이상 작성해 주세요." });
       const section = document.getElementById("section-02");
       section?.scrollIntoView({ behavior: "smooth", block: "center" });
       section?.focus({ preventScroll: true });
@@ -83,10 +83,10 @@ export default function SurveyForm() {
         {questions.map((question, i) => <fieldset className="question" id={`question-${i + 1}`} key={question}><legend className="question-title"><span className="qno">{String(i + 1).padStart(2, "0")}</span><span>{question}</span></legend><div className="choices">{scale.map((label, j) => <div className="choice" key={label}><input type="radio" id={`q${i + 1}-${j + 1}`} name={`q${i + 1}`} checked={ratings[i] === j + 1} onChange={() => setRatings((prev) => prev.map((v, index) => index === i ? j + 1 : v))} /><label htmlFor={`q${i + 1}-${j + 1}`} title={label}><span className="value">{j + 1}</span><span>{label}</span></label></div>)}</div></fieldset>)}
       </section>
       <section id="section-02" tabIndex={-1} className={`section ${section02Attempted && missingSection02.length ? "section-invalid" : ""}`} aria-labelledby="open-title">
-        <div className="section-head"><span className="num">02</span><div><h2 id="open-title">자유롭게 의견을 남겨 주세요</h2><p>두 문항 모두 필수입니다. 각 문항에 3문장 이상 작성해 주세요.</p></div></div>
-        {section02Attempted && missingSection02.length > 0 && <div className="section-warning" role="alert"><strong>02번 응답을 확인해 주세요.</strong><span>{missingSection02.join("과 ")} 문항을 각각 3문장 이상 작성해야 제출할 수 있습니다.</span></div>}
-        <div className="textarea-wrap"><label htmlFor="helpful">이번 수업에서 가장 도움이 되었던 내용이나 실습은 무엇인가?<span className="required">필수</span></label><textarea id="helpful" required aria-invalid={section02Attempted && helpfulSentences < minimumSentences} aria-describedby="helpful-count" maxLength={2000} value={helpful} onChange={(e) => setHelpful(e.target.value)} placeholder="예: 데이터에서 특징을 찾고 그래프를 선택했던 실습이 도움이 되었어요." /><p id="helpful-count" className={`sentence-count ${helpfulSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{helpfulSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
-        <div className="textarea-wrap"><label htmlFor="improve">앞으로 수업에서 개선되거나 추가되었으면 하는 점은 무엇인가?<span className="required">필수</span></label><textarea id="improve" required aria-invalid={section02Attempted && improveSentences < minimumSentences} aria-describedby="improve-count" maxLength={2000} value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="예: 한국어 용어 설명을 조금 더 천천히 해 주면 좋겠어요." /><p id="improve-count" className={`sentence-count ${improveSentences >= minimumSentences ? "met" : ""}`} aria-live="polite">{improveSentences} / {minimumSentences}문장 · 문장 끝에 마침표, 물음표, 느낌표를 표시해 주세요.</p></div>
+        <div className="section-head"><span className="num">02</span><div><h2 id="open-title">자유롭게 의견을 남겨 주세요</h2><p>두 문항 모두 필수입니다. 각 문항에 공백 포함 50자 이상 작성해 주세요.</p></div></div>
+        {section02Attempted && missingSection02.length > 0 && <div className="section-warning" role="alert"><strong>02번 응답을 확인해 주세요.</strong><span>{missingSection02.join("과 ")} 문항을 각각 공백 포함 50자 이상 작성해야 제출할 수 있습니다.</span></div>}
+        <div className="textarea-wrap"><label htmlFor="helpful">이번 수업에서 가장 도움이 되었던 내용이나 실습은 무엇인가?<span className="required">필수</span></label><textarea id="helpful" required aria-invalid={section02Attempted && helpfulCharacters < minimumCharacters} aria-describedby="helpful-count" maxLength={2000} value={helpful} onChange={(e) => setHelpful(e.target.value)} placeholder="예: 데이터에서 특징을 찾고 그래프를 선택했던 실습이 도움이 되었어요." /><p id="helpful-count" className={`sentence-count ${helpfulCharacters >= minimumCharacters ? "met" : ""}`} aria-live="polite">{helpfulCharacters} / {minimumCharacters}자 · 공백 포함 {minimumCharacters}자 이상 작성해 주세요.</p></div>
+        <div className="textarea-wrap"><label htmlFor="improve">앞으로 수업에서 개선되거나 추가되었으면 하는 점은 무엇인가?<span className="required">필수</span></label><textarea id="improve" required aria-invalid={section02Attempted && improveCharacters < minimumCharacters} aria-describedby="improve-count" maxLength={2000} value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="예: 한국어 용어 설명을 조금 더 천천히 해 주면 좋겠어요." /><p id="improve-count" className={`sentence-count ${improveCharacters >= minimumCharacters ? "met" : ""}`} aria-live="polite">{improveCharacters} / {minimumCharacters}자 · 공백 포함 {minimumCharacters}자 이상 작성해 주세요.</p></div>
       </section>
       <section className="section" aria-labelledby="additional-title"><div className="section-head"><span className="num">03</span><div><h2 id="additional-title">추가 의견을 남겨 주세요</h2><p>이름과 의견은 모두 선택 항목입니다.</p></div></div>
         <div className="input-wrap"><label htmlFor="name">이름<span className="optional">선택</span></label><input id="name" type="text" maxLength={80} autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하지 않아도 됩니다." /></div>
