@@ -8,6 +8,13 @@
       "when": 1794366971220,
       "tag": "0000_gifted_juggernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794682481930,
+      "tag": "0001_tricky_stature",
+      "breakpoints": true
     }
   ]
 }
