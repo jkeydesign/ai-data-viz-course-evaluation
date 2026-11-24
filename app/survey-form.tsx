@@ -60,7 +60,10 @@ export default function SurveyForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ratings, helpful: helpful.trim(), improve: improve.trim(), name: name.trim(), additional: additional.trim() }),
       });
-      if (!response.ok) throw new Error("submit failed");
+      if (!response.ok) {
+        const result = await response.json().catch(() => null) as { error?: unknown } | null;
+        throw new Error(typeof result?.error === "string" ? result.error : "응답을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      }
       setStatus({ kind: "ok", message: "응답이 제출되었습니다. 소중한 의견 감사합니다." });
       setRatings(Array(8).fill(null));
       setHelpful("");
@@ -69,8 +72,11 @@ export default function SurveyForm() {
       setAdditional("");
       setSection02Attempted(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {
-      setStatus({ kind: "error", message: "응답을 저장하지 못했습니다. 연결 상태를 확인한 뒤 다시 제출해 주세요." });
+    } catch (error) {
+      const message = error instanceof Error && error.message
+        ? error.message
+        : "응답을 저장하지 못했습니다. 연결 상태를 확인한 뒤 다시 제출해 주세요.";
+      setStatus({ kind: "error", message });
     } finally {
       setBusy(false);
     }
