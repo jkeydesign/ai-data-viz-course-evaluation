@@ -1,8 +1,8 @@
 import { getDb } from "../../../db";
 import { surveyResponses } from "../../../db/schema";
 
-function countSentences(text: string) {
-  return (text.trim().match(/[.!?。]+(?=\s|$)/g) ?? []).length;
+function countCharacters(text: string) {
+  return Array.from(text).length;
 }
 
 export async function POST(request: Request) {
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
   if (
     !Array.isArray(ratings) || ratings.length !== 8 ||
     !ratings.every((rating) => Number.isInteger(rating) && rating >= 1 && rating <= 5) ||
-    typeof helpful !== "string" || helpful.length > 2000 || countSentences(helpful) < 3 ||
-    typeof improve !== "string" || improve.length > 2000 || countSentences(improve) < 3 ||
+    typeof helpful !== "string" || helpful.length > 2000 || helpful.trim().length === 0 || countCharacters(helpful) < 50 ||
+    typeof improve !== "string" || improve.length > 2000 || improve.trim().length === 0 || countCharacters(improve) < 50 ||
     (name !== undefined && (typeof name !== "string" || name.length > 80)) ||
     (additional !== undefined && (typeof additional !== "string" || additional.length > 2000))
   ) {
