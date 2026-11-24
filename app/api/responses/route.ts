@@ -26,8 +26,8 @@ export async function POST(request: Request) {
   if (
     !Array.isArray(ratings) || ratings.length !== 8 ||
     !ratings.every((rating) => Number.isInteger(rating) && rating >= 1 && rating <= 5) ||
-    typeof helpful !== "string" || helpful.length > 2000 || helpful.trim().length === 0 || countCharacters(helpful) < 50 ||
-    typeof improve !== "string" || improve.length > 2000 || improve.trim().length === 0 || countCharacters(improve) < 50 ||
+    typeof helpful !== "string" || helpful.length > 2000 || helpful.trim().length === 0 || countCharacters(helpful) < 20 ||
+    typeof improve !== "string" || improve.length > 2000 || improve.trim().length === 0 || countCharacters(improve) < 20 ||
     (name !== undefined && (typeof name !== "string" || name.length > 80)) ||
     (additional !== undefined && (typeof additional !== "string" || additional.length > 2000))
   ) {
