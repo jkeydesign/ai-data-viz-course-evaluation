@@ -1,4 +1,5 @@
 import AdminCharts from "./charts";
+import AdminControls from "./admin-controls";
 
 export type AdminResponse = {
   id: number;
@@ -57,7 +58,7 @@ export default function AdminDashboard({ totalResponses, responses }: { totalRes
   ];
 
   return <main className="admin-page">
-    <header className="admin-header"><div><span className="admin-eyebrow">AI DATA VISUALIZATION · ADMIN</span><h1>강의평가 대시보드</h1><p>학생 응답을 바탕으로 교육 성과와 개선이 필요한 지점을 확인합니다.</p></div><a className="admin-back" href="/">설문 보기 ↗</a></header>
+    <header className="admin-header"><div><span className="admin-eyebrow">AI DATA VISUALIZATION · ADMIN</span><h1>강의평가 대시보드</h1><p>학생 응답을 바탕으로 교육 성과와 개선이 필요한 지점을 확인합니다.</p></div><div className="admin-header-actions"><AdminControls /><a className="admin-back" href="/">설문 보기 ↗</a></div></header>
 
     <section className="admin-summary" aria-label="핵심 지표">
       <article className="admin-summary-card"><span>총 응답</span><strong>{totalResponses.toLocaleString("ko-KR")}</strong><small>건</small></article>
